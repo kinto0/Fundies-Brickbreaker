@@ -63,7 +63,7 @@
 ; - where the first Number is the brick's health
 ; - the second number is the brick's x coordinate
 ; - the third number is the brick's y coordinate
-
+(define BRICK-EX (make-brick 2 100 30))
 
 ;; A List-of-Bricks is one of:
 ; - '()
@@ -336,22 +336,58 @@
 
 ;; ------------------ TOUCHING BRICK???????? -------------------------------
 
+<<<<<<< HEAD
+=======
+;; touching-brick? : [List-of Brick] Ball -> Brick
+;; Determines if the ball is touching any bricks in the list
+(check-expect (touching-brick? INITIAL-BRICKS BALL-lwc) #false)
+(check-expect (touching-brick? INITIAL-BRICKS BALL-lbc) #true)
+
+>>>>>>> 6187e203df2752f5ce8295d25e014cf602026c31
 (define (touching-brick lob ball)
   (cond
     [(empty? lob) '()]
     [(cons? lob) (if (touching-single-brick (first lob) ball) (first lob) (touching-brick (rest lob) ball))]))
 
+<<<<<<< HEAD
+=======
+;; touching-single-brick : Brick Ball -> Boolean
+;; Checks if a ball is touching a single brick
+(check-expect (touching-single-brick? BRICK-EX BALL-lwc) #false)
+(check-expect (touching-single-brick? BRICK-EX BALL-bbc) #true)
+
+>>>>>>> 6187e203df2752f5ce8295d25e014cf602026c31
 (define (touching-single-brick? brick ball)
   (and (touching-brick-t? brick ball) (touching-brick-b? brick ball) (touching-brick-l? brick ball) (touching-brick-r? brick ball)))
+
+;; touching-brick-l? : Brick Ball -> Boolean
+;; Checks if the ball is within the brick's left boundary
+(check-expect (touching-brick-l? BRICK-EX BALL-lwc) #false)
+(check-expect (touching-brick-l? BRICK-EX BALL-lbc) #true)
 
 (define (touching-brick-l? brick ball)
   (< (+ (brick-x brick) (/ BRICK-WIDTH 2)) (- (ball-x ball) BALL-RADIUS)))
 
+;; touching-brick-r? : Brick Ball -> Boolean
+;; Checks if the ball is within the brick's right boundary
+(check-expect (touching-brick-r? BRICK-EX BALL-lwc) #false)
+(check-expect (touching-brick-r? BRICK-EX BALL-rbc) #true)
+
 (define (touching-brick-r? brick ball)
   (> (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS)))
 
+;; touching-brick-b? : Brick Ball -> Boolean
+;; Checks if the ball is within the brick's bottom boundary
+(check-expect (touching-brick-b? BRICK-EX BALL-lwc) #false)
+(check-expect (touching-brick-b? BRICK-EX BALL-bbc) #true)
+
 (define (touching-brick-b? brick ball)
   (> (+ (brick-y brick) (/ BRICK-WIDTH 2)) (+ (ball-y ball) BALL-RADIUS)))
+
+;; touching-brick-t? : Brick Ball -> Boolean
+;; Checks if the ball is within the brick's top boundary
+(check-expect (touching-brick-t? BRICK-EX BALL-lwc) #false)
+(check-expect (touching-brick-t? BRICK-EX BALL-tbc) #true)
 
 (define (touching-brick-t? brick ball)
   (< (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS)))
