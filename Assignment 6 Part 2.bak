@@ -38,18 +38,7 @@
 ; - the fourth Number is the ball's y-velocity
 (define INITIAL-BALL (make-ball (/ WIDTH 2)
                                 (- HEIGHT (* 2 PADDLE-HEIGHT) (/ BALL-RADIUS 2))
-                                BALL-SPEED
-                                0))
-(define BALL-nc (make-ball 100 150 1 1))
-(define BALL-lwc (make-ball 0 150 1 1))
-(define BALL-rwc (make-ball 200 150 1 1))
-(define BALL-twc (make-ball 150 0 1 1))
-(define BALL-bwc (make-ball 150 200 1 1))
-(define BALL-lbc (make-ball 85 30 1 1))
-(define BALL-rbc (make-ball 115 30 1 1))
-(define BALL-bbc (make-ball 100 45 1 1))
-(define BALL-tbc (make-ball 100 15 1 1))
-
+                                BALL-SPEED 0))
 
 ;; A Paddle is a (make-paddle Number)
 
@@ -90,16 +79,7 @@
 (define-struct world (ball paddle lob launched))
 
 (define WORLD0 (make-world INITIAL-BALL PADDLE1 INITIAL-BRICKS #false))
-(define WORLD-nc (make-world BALL-nc PADDLE1 INITIAL-BRICKS #true))
-(define WORLD-lwc (make-world BALL-lwc PADDLE1 INITIAL-BRICKS #true))
-(define WORLD-rwc (make-world BALL-rwc PADDLE1 INITIAL-BRICKS #true))
-(define WORLD-twc (make-world BALL-twc PADDLE1 INITIAL-BRICKS #true))
-(define WORLD-bwc (make-world BALL-bwc PADDLE1 INITIAL-BRICKS #true))
-(define WORLD-lbc (make-world BALL-lbc PADDLE1 INITIAL-BRICKS #true))
-(define WORLD-rbc (make-world BALL-rbc PADDLE1 INITIAL-BRICKS #true))
-(define WORLD-tbc (make-world BALL-tbc PADDLE1 INITIAL-BRICKS #true))
-(define WORLD-bbc (make-world BALL-bbc PADDLE1 INITIAL-BRICKS #true))
-
+(define WORLD1 (make-world INITIAL-BALL PADDLE1 INITIAL-BRICKS #true))
 
 (define (main _)
   (big-bang WORLD0
@@ -108,7 +88,6 @@
     [on-tick tick-world]
     ;[stop-when dead? show-end]
     ))
-
 #|--- FUNCTIONS ---|#
 
 ;; speed: Ball -> Number
@@ -238,7 +217,7 @@
 ;; tick-world : World -> World
 ;; Checks if the ball has been launched yet
 (check-expect (tick-world WORLD0) (make-world (launch-ball INITIAL-BALL (/ WIDTH 2)) PADDLE1 INITIAL-BRICKS #true))
-(check-expect (tick-world WORLD-nc) (move-ball-helper WORLD-nc))
+(check-expect (tick-world WORLD1) (move-ball-helper WORLD1))
 
 (define (tick-world w)
   (cond
@@ -246,11 +225,7 @@
     [(not (world-launched w))
      (make-world (launch-ball INITIAL-BALL (/ WIDTH 2)) (world-paddle w) (world-lob w) #true)]))
 
-;; move-ball : World -> World
-;; Checks if there is a collision or not
-(check-expect (move-ball-helper WORLD-nc) (move-ball WORLD-nc))
-(check-expect (move-ball-helper WORLD-lwc) ...)
-
+;; move-ball
 (define (move-ball-helper w)
   (cond
     [(collision? w)
@@ -261,18 +236,13 @@
         [](change-direction w)]
     [else (move-ball w)]))
 
-;; collision? : World -> Boolean
-;; Determines if there is a collision with the ball
-(check-expect (collision? WORLD-nc) #false)
-(check-expect (collision? WORLD-lwc) #true)
-
+;;
+;;
 (define (collision? w)
   (or (touching-brick (world-lob w) (world-ball w)) (touching-wall w) (touching-paddle w)))
 
-;; move-ball : World -> World
-;; Moves the ball
-(check-expect (move-ball WORLD-nc) (make-world (make-ball 2 2 1 1) PADDLE1 INITIAL-BRICKS #true))
-
+;; move
+;;
 (define (move-ball w)
   (make-world (make-ball (+ (ball-x (world-ball w)) (ball-vx (world-ball w)))
                          (+ (ball-y (world-ball w)) (ball-vy (world-ball w)))
@@ -285,42 +255,17 @@
 
 ;; ----------------- TOUCHING WALL??? ------------------------------------
 
-;; touching-wall : World -> Boolean
-;; Determines if the ball is touching a wall
-(check-expect (touching-wall WORLD-lwc) #true)
-(check-expect (touching-wall WORLD-lbc) #false)
-
 (define (touching-wall w)
   (or (touching-wall-r? w) (touching-wall-l? w) (touching-wall-t? w)))
-
-;; touching-wall-r? : World -> Boolean
-;; Determines if the ball is touching the right wall
-(check-expect (touching-wall-r? WORLD-lwc) #false)
-(check-expect (touching-wall-r? WORLD-rwc) #true)
 
 (define (touching-wall-r? w)
   (>= (+ (ball-x (world-ball w)) BALL-RADIUS) WIDTH))
 
-;; touching-wall-l? : World -> Boolean
-;; Determines if the ball is touching the left wall
-(check-expect (touching-wall-l? WORLD-rwc) #true)
-(check-expect (touching-wall-l? WORLD-lwc) #false)
-
 (define (touching-wall-l? w)
   (<= (- (ball-x (world-ball w) BALL-RADIUS) WIDTH)))
 
-;; touching-wall-t? : World -> Boolean
-;; Determines if the ball is touching the top wall
-(check-expect (touching-wall-t? WORLD-lwc) #false)
-(check-expect (touching-wall-t? WORLD-twc) #true)
-
 (define (touching-wall-t? w)
   (<= (+ (ball-y (world-ball w) BALL-RADIUS) HEIGHT)))
-
-;; touching-wall-b? : World -> Boolean
-;; Determines if the ball is touching the bottom wall
-(check-expect (touching-wall-b? WORLD-lwc) #false)
-(check-expect (touching-wall-b? WORLD-bwc) #true)
 
 (define (touching-wall-b? w)
   (<= (- (ball-y (world-ball w) BALL-RADIUS) HEIGHT)))
