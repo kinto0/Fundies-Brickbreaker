@@ -147,8 +147,8 @@
 ;;Launch ball off paddle with this x-coordinate
 (define (launch-ball ball x)
   (make-ball (+ (ball-x ball) (new-x-velocity ball x))
-               (+ (ball-y ball) (new-y-velocity ball x))
-               (new-x-velocity ball x) (new-y-velocity ball x)))
+             (+ (ball-y ball) (new-y-velocity ball x))
+             (new-x-velocity ball x) (new-y-velocity ball x)))
 (check-expect (launch-ball INITIAL-BALL 100)
               (make-ball 100 173 0 -4))
 (check-expect (launch-ball (make-ball 60 190 3 4) 100)
@@ -160,7 +160,7 @@
 ;; Draw-world : World -> Image
 ;; Renders the world onto an image
 (check-expect (draw-world WORLD0)
-                (draw-ball INITIAL-BALL (draw-bricks INITIAL-BRICKS (draw-paddle PADDLE1))))
+              (draw-ball INITIAL-BALL (draw-bricks INITIAL-BRICKS (draw-paddle PADDLE1))))
 
 (define (draw-world w)
   (draw-ball (world-ball w) (draw-bricks INITIAL-BRICKS (draw-paddle (world-paddle w)))))
@@ -254,12 +254,12 @@
 (define (move-ball-helper w)
   (cond
     [(collision? w)
-      (cond
-        []
-        []
-        []
-        [](change-direction w)]
-    [else (move-ball w)]))
+     (cond
+       [(touching-wall w) ""]
+       [(touching-brick? (world-lob w) (world-ball w)) ""]
+       [(touching-paddle w) ""]
+       [else (move-ball w)])]
+    [else ""]))
 
 ;; collision? : World -> Boolean
 ;; Determines if there is a collision with the ball
@@ -267,7 +267,7 @@
 (check-expect (collision? WORLD-lwc) #true)
 
 (define (collision? w)
-  (or (touching-brick (world-lob w) (world-ball w)) (touching-wall w) (touching-paddle w)))
+  (or (touching-brick? (world-lob w) (world-ball w)) (touching-wall w) (touching-paddle w)))
 
 ;; move-ball : World -> World
 ;; Moves the ball
@@ -307,7 +307,7 @@
 (check-expect (touching-wall-l? WORLD-lwc) #false)
 
 (define (touching-wall-l? w)
-  (<= (- (ball-x (world-ball w) BALL-RADIUS) WIDTH)))
+  (<= (- (ball-x (world-ball w)) BALL-RADIUS) WIDTH))
 
 ;; touching-wall-t? : World -> Boolean
 ;; Determines if the ball is touching the top wall
@@ -315,7 +315,7 @@
 (check-expect (touching-wall-t? WORLD-twc) #true)
 
 (define (touching-wall-t? w)
-  (<= (+ (ball-y (world-ball w) BALL-RADIUS) HEIGHT)))
+  (<= (+ (ball-y (world-ball w)) BALL-RADIUS) HEIGHT))
 
 ;; touching-wall-b? : World -> Boolean
 ;; Determines if the ball is touching the bottom wall
@@ -323,29 +323,45 @@
 (check-expect (touching-wall-b? WORLD-bwc) #true)
 
 (define (touching-wall-b? w)
-  (<= (- (ball-y (world-ball w) BALL-RADIUS) HEIGHT)))
+  (<= (- (ball-y (world-ball w)) BALL-RADIUS) HEIGHT))
 
 ;; ------------------ TOUCHING BRICK???????? -------------------------------
 
-(define (touching-brick lob ball)
+(define (touching-brick? lob ball)
   (cond
     [(empty? lob) #false]
-    [else (or (touching-single-brick (first lob) ball) (touching-brick (rest lob) ball))]))
+    [else (or (touching-single-brick (first lob) ball) (touching-brick? (rest lob) ball))]))
 
 (define (touching-single-brick brick ball)
-  (or (touching-brick-r? brick ball) (touching-brick-l? brick ball) (touching-brick-t? brick ball) (touching-brick-b? brick ball)))
+  (and (touching-brick-t? brick ball) (touching-brick-b? brick ball) (touching-brick-l? brick ball) (touching-brick-r? brick ball)))
+
+(define (touching-brick-l? brick ball)
+  (< (+ (brick-x brick) (/ BRICK-WIDTH 2)) (- (ball-x ball) BALL-RADIUS)))
 
 (define (touching-brick-r? brick ball)
-  )
-(define (touching-brick-l? brick ball)
-  )
-(define (touching-brick-t? brick ball)
-  )
+  (> (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS)))
+
 (define (touching-brick-b? brick ball)
-  )
+  (> (+ (brick-y brick) (/ BRICK-WIDTH 2)) (+ (ball-y ball) BALL-RADIUS)))
+
+(define (touching-brick-t? brick ball)
+  (< (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS)))
+
+
+;; ------------------ TOUCHING PADDLE??????? -------------------------------
 
 (define (touching-paddle w)
-  )
+  (and (touching-paddle-l? w) (touching-paddle-r? w) (touching-paddle-m? w)))
+
+(define (touching-paddle-l? w)
+  (and (= (ball-y (world-ball w)) 190)
+       (< (- (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)) (- (ball-x (world-ball w)) BALL-RADIUS) (+ (- (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)) (/ PADDLE-WIDTH 3)))))
+(define (touching-paddle-m? w)
+  (and (= (ball-y (world-ball w)) 190)
+       (< (+ (- (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)) (/ PADDLE-WIDTH 3)) (- (ball-x (world-ball w)) BALL-RADIUS) (- (paddle-x (world-paddle w)) (* 2 (/ PADDLE-WIDTH 3))))))
+(define (touching-paddle-r? w)
+  (and (= (ball-y (world-ball w)) 190)
+       (< (- (paddle-x (world-paddle w)) (* 2 (/ PADDLE-WIDTH 3))) (- (ball-x (world-ball w)) BALL-RADIUS) (+ (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)))))
 
 
 (main 0)
