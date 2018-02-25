@@ -257,9 +257,8 @@
      (cond
        [(touching-wall w) ""]
        [(touching-brick? (world-lob w) (world-ball w)) ""]
-       [(touching-paddle w) ""]
-       [else (move-ball w)])]
-    [else ""]))
+       [(touching-paddle w) ""])]
+    [else (move-ball w)]))
 
 ;; collision? : World -> Boolean
 ;; Determines if there is a collision with the ball
