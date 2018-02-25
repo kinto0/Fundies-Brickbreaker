@@ -247,7 +247,7 @@
      (make-world (launch-ball INITIAL-BALL (/ WIDTH 2)) (world-paddle w) (world-lob w) #true)]))
 
 ;; move-ball : World -> World
-;; Checks if there is a collision or not
+;; Checks if there is a collision or not and changes ball direction if nececssary
 (check-expect (move-ball-helper WORLD-nc) (move-ball WORLD-nc))
 (check-expect (move-ball-helper WORLD-lwc) ...)
 
@@ -255,9 +255,19 @@
   (cond
     [(collision? w)
      (cond
-       [(touching-wall w) ""]
-       [(touching-brick? (world-lob w) (world-ball w)) ""]
-       [(touching-paddle w) ""])]
+       [(touching-wall? w) (cond
+                            [(touching-wall-r? w) (flip-x w)]
+                            [(touching-wall-l? w) (flip-x w)]
+                            [(touching-wall-t? w) (flip-x w)])]
+       [(brick? (touching-brick (world-lob w) (world-ball w))) (cond
+                                                                [(touching-brick-l (touching-brick (world-lob w) (world-ball w))) (flip-x w)]
+                                                                [(touching-brick-r (touching-brick (world-lob w) (world-ball w))) (flip-x w)]
+                                                                [(touching-brick-t (touching-brick (world-lob w) (world-ball w))) (flip-y w)]
+                                                                [(touching-brick-b (touching-brick (world-lob w) (world-ball w))) (flip-y w)])]
+       [(touching-paddle? w) (cond
+                               [(touching-paddle-l? w) (bounce-left w)]
+                               [(touching-paddle-m? w) (flip-y w)]
+                               [(touching-paddle-r? w) (bounce-right w)])])]
     [else (move-ball w)]))
 
 ;; collision? : World -> Boolean
@@ -266,7 +276,7 @@
 (check-expect (collision? WORLD-lwc) #true)
 
 (define (collision? w)
-  (or (touching-brick? (world-lob w) (world-ball w)) (touching-wall w) (touching-paddle w)))
+  (or (brick? (touching-brick (world-lob w) (world-ball w))) (touching-wall? w) (touching-paddle? w)))
 
 ;; move-ball : World -> World
 ;; Moves the ball
@@ -286,10 +296,10 @@
 
 ;; touching-wall : World -> Boolean
 ;; Determines if the ball is touching a wall
-(check-expect (touching-wall WORLD-lwc) #true)
-(check-expect (touching-wall WORLD-lbc) #false)
+(check-expect (touching-wall? WORLD-lwc) #true)
+(check-expect (touching-wall? WORLD-lbc) #false)
 
-(define (touching-wall w)
+(define (touching-wall? w)
   (or (touching-wall-r? w) (touching-wall-l? w) (touching-wall-t? w)))
 
 ;; touching-wall-r? : World -> Boolean
@@ -326,12 +336,12 @@
 
 ;; ------------------ TOUCHING BRICK???????? -------------------------------
 
-(define (touching-brick? lob ball)
+(define (touching-brick lob ball)
   (cond
-    [(empty? lob) #false]
-    [else (or (touching-single-brick (first lob) ball) (touching-brick? (rest lob) ball))]))
+    [(empty? lob) '()]
+    [(cons? lob) (if (touching-single-brick (first lob) ball) (first lob) (touching-brick (rest lob) ball))]))
 
-(define (touching-single-brick brick ball)
+(define (touching-single-brick? brick ball)
   (and (touching-brick-t? brick ball) (touching-brick-b? brick ball) (touching-brick-l? brick ball) (touching-brick-r? brick ball)))
 
 (define (touching-brick-l? brick ball)
@@ -349,7 +359,7 @@
 
 ;; ------------------ TOUCHING PADDLE??????? -------------------------------
 
-(define (touching-paddle w)
+(define (touching-paddle? w)
   (and (touching-paddle-l? w) (touching-paddle-r? w) (touching-paddle-m? w)))
 
 (define (touching-paddle-l? w)
