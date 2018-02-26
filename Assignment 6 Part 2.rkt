@@ -249,7 +249,7 @@
 ;; move-ball : World -> World
 ;; Checks if there is a collision or not and changes ball direction if nececssary
 (check-expect (move-ball-helper WORLD-nc) (move-ball WORLD-nc))
-(check-expect (move-ball-helper WORLD-lwc) ...)
+;;(check-expect (move-ball-helper WORLD-lwc) ...)
 
 (define (move-ball-helper w)
   (cond
@@ -260,15 +260,27 @@
                             [(touching-wall-l? w) (flip-x w)]
                             [(touching-wall-t? w) (flip-x w)])]
        [(brick? (touching-brick (world-lob w) (world-ball w))) (cond
-                                                                [(touching-brick-l (touching-brick (world-lob w) (world-ball w))) (flip-x w)]
-                                                                [(touching-brick-r (touching-brick (world-lob w) (world-ball w))) (flip-x w)]
-                                                                [(touching-brick-t (touching-brick (world-lob w) (world-ball w))) (flip-y w)]
-                                                                [(touching-brick-b (touching-brick (world-lob w) (world-ball w))) (flip-y w)])]
+                                                                [(touching-brick-l? (touching-brick (world-lob w) (world-ball w))) (flip-x w)]
+                                                                [(touching-brick-r? (touching-brick (world-lob w) (world-ball w))) (flip-x w)]
+                                                                [(touching-brick-t? (touching-brick (world-lob w) (world-ball w))) (flip-y w)]
+                                                                [(touching-brick-b? (touching-brick (world-lob w) (world-ball w))) (flip-y w)])]
        [(touching-paddle? w) (cond
-                               [(touching-paddle-l? w) (bounce-left w)]
+                               [(touching-paddle-l? w) (bounce-l w)]
                                [(touching-paddle-m? w) (flip-y w)]
-                               [(touching-paddle-r? w) (bounce-right w)])])]
+                               [(touching-paddle-r? w) (bounce-r w)])])]
     [else (move-ball w)]))
+
+(define (flip-x w)
+  (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (* -1 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w)))
+
+(define (flip-y w)
+  (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (ball-vx (world-ball w)) (* -1 (ball-vy (world-ball w)))) (world-paddle w) (world-lob w) (world-launched w)))
+
+(define (bounce-r w)
+  (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (+ 20 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w)))
+
+(define (bounce-l w)
+  (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (- 20 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w)))
 
 ;; collision? : World -> Boolean
 ;; Determines if there is a collision with the ball
@@ -336,27 +348,21 @@
 
 ;; ------------------ TOUCHING BRICK???????? -------------------------------
 
-<<<<<<< HEAD
-=======
 ;; touching-brick? : [List-of Brick] Ball -> Brick
 ;; Determines if the ball is touching any bricks in the list
-(check-expect (touching-brick? INITIAL-BRICKS BALL-lwc) #false)
-(check-expect (touching-brick? INITIAL-BRICKS BALL-lbc) #true)
+;(check-expect (touching-brick INITIAL-BRICKS BALL-lwc) #false)
+;(check-expect (touching-brick INITIAL-BRICKS BALL-lbc) #true)
 
->>>>>>> 6187e203df2752f5ce8295d25e014cf602026c31
 (define (touching-brick lob ball)
   (cond
     [(empty? lob) '()]
-    [(cons? lob) (if (touching-single-brick (first lob) ball) (first lob) (touching-brick (rest lob) ball))]))
+    [(cons? lob) (if (touching-single-brick? (first lob) ball) (first lob) (touching-brick (rest lob) ball))]))
 
-<<<<<<< HEAD
-=======
 ;; touching-single-brick : Brick Ball -> Boolean
 ;; Checks if a ball is touching a single brick
 (check-expect (touching-single-brick? BRICK-EX BALL-lwc) #false)
 (check-expect (touching-single-brick? BRICK-EX BALL-bbc) #true)
 
->>>>>>> 6187e203df2752f5ce8295d25e014cf602026c31
 (define (touching-single-brick? brick ball)
   (and (touching-brick-t? brick ball) (touching-brick-b? brick ball) (touching-brick-l? brick ball) (touching-brick-r? brick ball)))
 
