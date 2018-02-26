@@ -258,12 +258,12 @@
        [(touching-wall? w) (cond
                             [(touching-wall-r? w) (flip-x w)]
                             [(touching-wall-l? w) (flip-x w)]
-                            [(touching-wall-t? w) (flip-x w)])]
+                            [(touching-wall-t? w) (flip-y w)])]
        [(brick? (touching-brick (world-lob w) (world-ball w))) (cond
-                                                                [(touching-brick-l? (touching-brick (world-lob w) (world-ball w))) (flip-x w)]
-                                                                [(touching-brick-r? (touching-brick (world-lob w) (world-ball w))) (flip-x w)]
-                                                                [(touching-brick-t? (touching-brick (world-lob w) (world-ball w))) (flip-y w)]
-                                                                [(touching-brick-b? (touching-brick (world-lob w) (world-ball w))) (flip-y w)])]
+                                                                [(touching-brick-l? (touching-brick (world-lob w) (world-ball w)) (world-ball w)) (flip-x w)]
+                                                                [(touching-brick-r? (touching-brick (world-lob w) (world-ball w)) (world-ball w)) (flip-x w)]
+                                                                [(touching-brick-t? (touching-brick (world-lob w) (world-ball w)) (world-ball w)) (flip-y w)]
+                                                                [(touching-brick-b? (touching-brick (world-lob w) (world-ball w)) (world-ball w)) (flip-y w)])]
        [(touching-paddle? w) (cond
                                [(touching-paddle-l? w) (bounce-l w)]
                                [(touching-paddle-m? w) (flip-y w)]
@@ -328,7 +328,7 @@
 (check-expect (touching-wall-l? WORLD-lwc) #false)
 
 (define (touching-wall-l? w)
-  (<= (- (ball-x (world-ball w)) BALL-RADIUS) WIDTH))
+  (<= (- (ball-x (world-ball w)) BALL-RADIUS) 0))
 
 ;; touching-wall-t? : World -> Boolean
 ;; Determines if the ball is touching the top wall
@@ -336,7 +336,7 @@
 (check-expect (touching-wall-t? WORLD-twc) #true)
 
 (define (touching-wall-t? w)
-  (<= (+ (ball-y (world-ball w)) BALL-RADIUS) HEIGHT))
+  (<= (+ (ball-y (world-ball w)) BALL-RADIUS) 0))
 
 ;; touching-wall-b? : World -> Boolean
 ;; Determines if the ball is touching the bottom wall
@@ -350,8 +350,8 @@
 
 ;; touching-brick? : [List-of Brick] Ball -> Brick
 ;; Determines if the ball is touching any bricks in the list
-;(check-expect (touching-brick INITIAL-BRICKS BALL-lwc) #false)
-;(check-expect (touching-brick INITIAL-BRICKS BALL-lbc) #true)
+(check-expect (touching-brick INITIAL-BRICKS BALL-lwc) #false)
+(check-expect (touching-brick INITIAL-BRICKS BALL-lbc) #true)
 
 (define (touching-brick lob ball)
   (cond
@@ -372,7 +372,7 @@
 (check-expect (touching-brick-l? BRICK-EX BALL-lbc) #true)
 
 (define (touching-brick-l? brick ball)
-  (< (+ (brick-x brick) (/ BRICK-WIDTH 2)) (- (ball-x ball) BALL-RADIUS)))
+  (< (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS)))
 
 ;; touching-brick-r? : Brick Ball -> Boolean
 ;; Checks if the ball is within the brick's right boundary
@@ -380,7 +380,7 @@
 (check-expect (touching-brick-r? BRICK-EX BALL-rbc) #true)
 
 (define (touching-brick-r? brick ball)
-  (> (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS)))
+  (> (+ (brick-x brick) (/ BRICK-WIDTH 2)) (- (ball-x ball) BALL-RADIUS)))
 
 ;; touching-brick-b? : Brick Ball -> Boolean
 ;; Checks if the ball is within the brick's bottom boundary
@@ -388,7 +388,7 @@
 (check-expect (touching-brick-b? BRICK-EX BALL-bbc) #true)
 
 (define (touching-brick-b? brick ball)
-  (> (+ (brick-y brick) (/ BRICK-WIDTH 2)) (+ (ball-y ball) BALL-RADIUS)))
+  (> (+ (brick-y brick) (/ BRICK-HEIGHT 2)) (- (ball-y ball) BALL-RADIUS)))
 
 ;; touching-brick-t? : Brick Ball -> Boolean
 ;; Checks if the ball is within the brick's top boundary
@@ -396,7 +396,7 @@
 (check-expect (touching-brick-t? BRICK-EX BALL-tbc) #true)
 
 (define (touching-brick-t? brick ball)
-  (< (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS)))
+  (< (- (brick-x brick) (/ BRICK-HEIGHT 2)) (+ (ball-x ball) BALL-RADIUS)))
 
 
 ;; ------------------ TOUCHING PADDLE??????? -------------------------------
