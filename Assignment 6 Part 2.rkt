@@ -271,16 +271,16 @@
     [else (move-ball w)]))
 
 (define (flip-x w)
-  (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (* -1 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w)))
+  (move-ball (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (* -1 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w))))
 
 (define (flip-y w)
-  (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (ball-vx (world-ball w)) (* -1 (ball-vy (world-ball w)))) (world-paddle w) (world-lob w) (world-launched w)))
+  (move-ball (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (ball-vx (world-ball w)) (* -1 (ball-vy (world-ball w)))) (world-paddle w) (world-lob w) (world-launched w))))
 
 (define (bounce-r w)
-  (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (+ 20 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w)))
+  (move-ball (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (+ 20 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w))))
 
 (define (bounce-l w)
-  (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (- 20 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w)))
+  (move-ball (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (- 20 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w))))
 
 ;; collision? : World -> Boolean
 ;; Determines if there is a collision with the ball
