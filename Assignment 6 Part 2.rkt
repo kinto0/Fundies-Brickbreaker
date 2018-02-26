@@ -283,7 +283,6 @@
     [(collision? w)
      (cond
        [(touching-wall? w) (cond
-                                                                [(touching-brick-b? (touching-brick (world-lob w) (world-ball w)) (world-ball w)) (flip-y w)])]
                              [(touching-wall-r? w) (flip-x w)]
                              [(touching-wall-l? w) (flip-x w)]
                              [(touching-wall-t? w) (flip-y w)])]
@@ -297,6 +296,7 @@
                                [(touching-paddle-l? w) (bounce-l w)]
                                [(touching-paddle-m? w) (flip-y w)]
                                [(touching-paddle-r? w) (bounce-r w)])])]
+    ;;JUST USE LAUNCH BALL FOR ABOVE -GWEN
     [else (move-ball w)]))
 
 (define (flip-x w)
