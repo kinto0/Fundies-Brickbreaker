@@ -51,7 +51,7 @@
                                 0))
 
 ;; Ball for no collision
-(define BALL-nc (make-ball 100 150 1 1))
+(define BALL-nc (make-ball 100 151 1 1))
 
 ;; Balls for wall collisions
 (define BALL-lwc (make-ball 0 150 1 1))
@@ -66,27 +66,22 @@
 (define BALL-tbc (make-ball 100 25 1 1))
 
 ;; Balls for paddle collisions
-(define BALL-lpc (make-ball 80 (- PADDLE-Y (/ PADDLE-HEIGHT 2)) 1 1))
-(define BALL-mpc (make-ball 100 (- PADDLE-Y (/ PADDLE-HEIGHT 2)) 1 1))
-(define BALL-rpc (make-ball 120 (- PADDLE-Y (/ PADDLE-HEIGHT 2)) 1 1))
+(define BALL-lpc (make-ball 80 (- PADDLE-Y (/ PADDLE-HEIGHT 2) BALL-RADIUS) 1 1))
+(define BALL-mpc (make-ball 100 (- PADDLE-Y (/ PADDLE-HEIGHT 2) BALL-RADIUS) 1 1))
+(define BALL-rpc (make-ball 120 (- PADDLE-Y (/ PADDLE-HEIGHT 2) BALL-RADIUS) 1 1))
 
-;; A Paddle is a (make-paddle Number)
-(define-struct paddle (x))
-
+;; A Paddle is a number X
 ;; - Where x is the x-position of the paddle
 
-(define (paddle-temp p)
-  ( ... (paddle-x p) ... ))
+(define PADDLE1 100)
 
-(define PADDLE1 (make-paddle 100))
+(define PADDLE-lwc-f (+ (/ PADDLE-WIDTH 2) 1))
+(define PADDLE-lwc-t (+ (/ PADDLE-WIDTH 2) 0))
+(define PADDLE-lwc (- 0 100))
 
-(define PADDLE-lwc-f (make-paddle (+ (/ PADDLE-WIDTH 2) 1)))
-(define PADDLE-lwc-t (make-paddle (+ (/ PADDLE-WIDTH 2) 0)))
-(define PADDLE-lwc (make-paddle (- 0 100)))
-
-(define PADDLE-rwc-f (make-paddle (- WIDTH 1 (/ PADDLE-WIDTH 2))))
-(define PADDLE-rwc-t (make-paddle (- WIDTH (/ PADDLE-WIDTH 2))))
-(define PADDLE-rwc (make-paddle (+ WIDTH 100)))
+(define PADDLE-rwc-f (- WIDTH 1 (/ PADDLE-WIDTH 2)))
+(define PADDLE-rwc-t (- WIDTH (/ PADDLE-WIDTH 2)))
+(define PADDLE-rwc (+ WIDTH 100))
 
 ;; A Brick is a (make-brick Number Number Number)
 (define-struct brick (num x y))
@@ -223,7 +218,7 @@
 ;; launch-ball-world : World -> World
 ;; Creates a world in which the ball is launched
 (check-expect (launch-ball-world WORLD0)
-              (make-world (launch-ball (world-ball WORLD0) (paddle-x (world-paddle WORLD0)))
+              (make-world (launch-ball (world-ball WORLD0) (world-paddle WORLD0))
                           (world-paddle WORLD0)
                           (world-lob WORLD0)
                           #true
@@ -231,7 +226,7 @@
                           (world-score WORLD0)))
 
 (define (launch-ball-world w)
-  (make-world (launch-ball (world-ball w) (paddle-x (world-paddle w)))
+  (make-world (launch-ball (world-ball w) (world-paddle w))
               (world-paddle w)
               (world-lob w)
               #true
@@ -288,10 +283,10 @@
 
 ;; draw-paddle : Paddle -> Image
 ;; Draws the paddle on an image
-(check-expect (draw-paddle PADDLE1) (place-image THE-PADDLE (paddle-x PADDLE1) PADDLE-Y BG))
+(check-expect (draw-paddle PADDLE1) (place-image THE-PADDLE PADDLE1 PADDLE-Y BG))
 
 (define (draw-paddle paddle)
-  (place-image THE-PADDLE (paddle-x paddle) PADDLE-Y BG))
+  (place-image THE-PADDLE paddle PADDLE-Y BG))
 
 ;; move-paddle : World, KeyEvent -> World
 ;; Moves the paddle on user keypress
@@ -321,7 +316,7 @@
 ;; Moves paddle to the right
 (check-expect (move-left WORLD0)
               (make-world (make-ball (- 100 PADDLE-SPEED) 177 BALL-SPEED 0)
-                          (make-paddle (- 100 PADDLE-SPEED))
+                          (- 100 PADDLE-SPEED)
                           INITIAL-BRICKS
                           #false
                           3
@@ -361,30 +356,31 @@
                      (ball-vx ball)
                      (ball-vy ball))]))
 
+;; Paddle Boolean, Paddle
 (define (displace-paddle paddle left?)
   (cond
-    [left? (make-paddle (- (paddle-x paddle) PADDLE-SPEED))]
-    [else (make-paddle (+ (paddle-x paddle) PADDLE-SPEED))]))
+    [left? (- paddle PADDLE-SPEED)]
+    [else (+ paddle PADDLE-SPEED)]))
 
 ;; paddle-outside-screen-l? : Paddle -> Boolean
 ;; Checks whether the paddle is outside the screen to the left
-(check-expect (paddle-outside-screen-l? (make-paddle WIDTH)) #false)
-(check-expect (paddle-outside-screen-l? (make-paddle (+ (/ PADDLE-WIDTH 2) 1))) #false)
-(check-expect (paddle-outside-screen-l? (make-paddle (+ (/ PADDLE-WIDTH 2) 0))) #true)
-(check-expect (paddle-outside-screen-l? (make-paddle (- 0 100))) #true)
+(check-expect (paddle-outside-screen-l? WIDTH) #false)
+(check-expect (paddle-outside-screen-l? (+ (/ PADDLE-WIDTH 2) 1)) #false)
+(check-expect (paddle-outside-screen-l? (+ (/ PADDLE-WIDTH 2) 0)) #true)
+(check-expect (paddle-outside-screen-l? (- 0 100)) #true)
 
 (define (paddle-outside-screen-l? p)
-  (<= (- (paddle-x p) (/ PADDLE-WIDTH 2)) 0))
+  (<= (- p (/ PADDLE-WIDTH 2)) 0))
 
 ;; paddle-outside-screen-r? : Paddle -> Boolean
 ;; Checks whether the paddle is outside the screen to the right
-(check-expect (paddle-outside-screen-r? (make-paddle 0)) #false)
-(check-expect (paddle-outside-screen-r? (make-paddle (- WIDTH 1 (/ PADDLE-WIDTH 2)))) #false)
-(check-expect (paddle-outside-screen-r? (make-paddle (- WIDTH (/ PADDLE-WIDTH 2)))) #true)
-(check-expect (paddle-outside-screen-r? (make-paddle (+ WIDTH 100))) #true)
+(check-expect (paddle-outside-screen-r? 0) #false)
+(check-expect (paddle-outside-screen-r? (- WIDTH 1 (/ PADDLE-WIDTH 2))) #false)
+(check-expect (paddle-outside-screen-r? (- WIDTH (/ PADDLE-WIDTH 2))) #true)
+(check-expect (paddle-outside-screen-r? (+ WIDTH 100)) #true)
 
 (define (paddle-outside-screen-r? p)
-  (>= (+ (paddle-x p) (/ PADDLE-WIDTH 2)) WIDTH))
+  (>= (+ p (/ PADDLE-WIDTH 2)) WIDTH))
 
 
 ;; tick-world : World -> World
@@ -417,15 +413,15 @@
   (cond
     [(collision? w)
      (cond
-       [(touching-wall? w) (cond
-                             [(touching-wall-x? w) (flip-x w)]
-                             [(touching-wall-t? w) (flip-y w)])]
+       [(touching-wall? (world-ball w)) (cond
+                             [(touching-wall-x? (world-ball w)) (flip-x w)]
+                             [(touching-wall-t? (world-ball w)) (flip-y w)])]
        [(brick? (within-brick (world-lob w) (world-ball w))) (cond
                                                                [(within-brick-y? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-y w) (within-brick (world-lob w) (world-ball w)))]
                                                                [(within-brick-x? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-x w) (within-brick (world-lob w) (world-ball w)))]
                                                                [else w])]
-       [(touching-paddle? w) (launch-ball-world w)])]
-    [(touching-wall-b? w) (reset-world w)]
+       [(touching-paddle? (world-paddle w) (world-ball w)) (launch-ball-world w)])]
+    [(touching-wall-b? (world-ball w)) (reset-world w)]
     [else (move-ball w)]))
 
 ;; flip-x : World -> World
@@ -438,16 +434,12 @@
                                                         0)))
 
 (define (flip-x w)
-  (move-ball (make-world
-              (make-ball (ball-x (world-ball w))
-                         (ball-y (world-ball w))
-                         (* -1 (ball-vx (world-ball w)))
-                         (ball-vy (world-ball w)))
-              (world-paddle w)
-              (world-lob w)
-              (world-launched w)
-              (world-lives w)
-              (world-score w))))
+  (move-ball (make-world (flip-ball (world-ball w) #true)
+                         (world-paddle w)
+                         (world-lob w)
+                         (world-launched w)
+                         (world-lives w)
+                         (world-score w))))
 
 ;; flip-y : World -> World
 ;; Negates the ball's y velocity
@@ -459,17 +451,23 @@
                                                         0)))
 
 (define (flip-y w)
-  (move-ball (make-world
-              (make-ball
-               (ball-x (world-ball w))
-               (ball-y (world-ball w))
-               (ball-vx (world-ball w))
-               (* -1 (ball-vy (world-ball w))))
-              (world-paddle w)
-              (world-lob w)
-              (world-launched w)
-              (world-lives w)
-              (world-score w))))
+  (move-ball (make-world (flip-ball (world-ball w) #false)
+                         (world-paddle w)
+                         (world-lob w)
+                         (world-launched w)
+                         (world-lives w)
+                         (world-score w))))
+
+(define (flip-ball ball x?)
+  (cond
+    [x? (make-ball (ball-x ball)
+                   (ball-y ball)
+                   (* -1 (ball-vx ball))
+                   (ball-vy ball))]
+    [else (make-ball (ball-x ball)
+                     (ball-y ball)
+                     (ball-vx ball)
+                     (* -1 (ball-vy ball)))]))
 
 ;; reset-world : World -> World
 ;; Resets the ball and paddle to the initial state
@@ -504,8 +502,8 @@
 (define (collision? w)
   (or
    (brick? (within-brick (world-lob w) (world-ball w)))
-   (touching-wall? w)
-   (touching-paddle? w)))
+   (touching-wall? (world-ball w))
+   (touching-paddle? (world-paddle w) (world-ball w))))
 
 ;; move-ball : World -> World
 ;; Moves the ball
@@ -527,39 +525,39 @@
 
 ;; touching-wall : World -> Boolean
 ;; Determines if the ball is touching a wall
-(check-expect (touching-wall? WORLD-lwc) #true)
-(check-expect (touching-wall? WORLD-lbc) #false)
+(check-expect (touching-wall? (world-ball WORLD-lwc)) #true)
+(check-expect (touching-wall? (world-ball WORLD-lbc)) #false)
 
-(define (touching-wall? w)
+(define (touching-wall? b)
   (or
-   (touching-wall-x? w)
-   (touching-wall-t? w)))
+   (touching-wall-x? b)
+   (touching-wall-t? b)))
 
 ;; touching-wall-z? : World -> Boolean
 ;; Determines if the ball is touching the right or left wall
-(check-expect (touching-wall-x? WORLD-lwc) #true)
-(check-expect (touching-wall-x? WORLD-rwc) #true)
-(check-expect (touching-wall-x? WORLD-twc) #false)
+(check-expect (touching-wall-x? (world-ball WORLD-lwc)) #true)
+(check-expect (touching-wall-x? (world-ball WORLD-rwc)) #true)
+(check-expect (touching-wall-x? (world-ball WORLD-twc)) #false)
 
-(define (touching-wall-x? w)
-  (or (>= (+ (ball-x (world-ball w)) BALL-RADIUS) WIDTH)
-      (<= (- (ball-x (world-ball w)) BALL-RADIUS) 0)))
+(define (touching-wall-x? ball)
+  (or (>= (+ (ball-x ball) BALL-RADIUS) WIDTH)
+      (<= (- (ball-x ball) BALL-RADIUS) 0)))
 
 ;; touching-wall-t? : World -> Boolean
 ;; Determines if the ball is touching the top wall
-(check-expect (touching-wall-t? WORLD-lwc) #false)
-(check-expect (touching-wall-t? WORLD-twc) #true)
+(check-expect (touching-wall-t? (world-ball WORLD-lwc)) #false)
+(check-expect (touching-wall-t? (world-ball WORLD-twc)) #true)
 
-(define (touching-wall-t? w)
-  (<= (- (ball-y (world-ball w)) BALL-RADIUS) 0))
+(define (touching-wall-t? ball)
+  (<= (- (ball-y ball) BALL-RADIUS) 0))
 
 ;; touching-wall-b? : World -> Boolean
 ;; Determines if the ball is touching the bottom wall
-(check-expect (touching-wall-b? WORLD-lwc) #false)
-(check-expect (touching-wall-b? WORLD-bwc) #true)
+(check-expect (touching-wall-b? (world-ball WORLD-lwc)) #false)
+(check-expect (touching-wall-b? (world-ball WORLD-bwc)) #true)
 
-(define (touching-wall-b? w)
-  (>= (+ (ball-y (world-ball w)) BALL-RADIUS) HEIGHT))
+(define (touching-wall-b? ball)
+  (>= (+ (ball-y ball) BALL-RADIUS) HEIGHT))
 
 ;; ------------------ WITHIN BRICK???????? -------------------------------
 
@@ -616,39 +614,33 @@
        (<= (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS))))
 
 ;; ------------------ TOUCHING PADDLE??????? -------------------------------
-;; touching-paddle? : World -> Boolean
+
+;; touching-paddle? : Paddle, Ball -> Boolean
 ;; Determines if the ball is touching the paddle
-(check-expect (touching-paddle? (make-world (make-ball 79
-                                                       (- PADDLE-Y (/ PADDLE-HEIGHT 2))
-                                                       1
-                                                       1)
-                                            PADDLE1
-                                            INITIAL-BRICKS
-                                            #true
-                                            LIVES
-                                            0))
+(check-expect (touching-paddle? PADDLE1
+                                (make-ball 79
+                                           (- PADDLE-Y (/ PADDLE-HEIGHT 2) BALL-RADIUS)
+                                           1
+                                           1))
               #false)
-(check-expect (touching-paddle? WORLD-lpc) #true)
-(check-expect (touching-paddle? (make-world (make-ball 81
-                                                       (- PADDLE-Y (/ PADDLE-HEIGHT 2))
-                                                       1
-                                                       1)
-                                            PADDLE1
-                                            INITIAL-BRICKS
-                                            #true
-                                            LIVES
-                                            0))
+(check-expect (touching-paddle? (world-paddle WORLD-lpc)
+                                (world-ball WORLD-lpc)) #true)
+(check-expect (touching-paddle? PADDLE1
+                                (make-ball 81
+                                           (- PADDLE-Y (/ PADDLE-HEIGHT 2) BALL-RADIUS)
+                                           1
+                                           1))
               #true)
                                                         
-(check-expect (touching-paddle? WORLD-mpc) #true)
-(check-expect (touching-paddle? WORLD-rpc) #true)
-(check-expect (touching-paddle? WORLD-twc) #false)
+(check-expect (touching-paddle? (world-paddle WORLD-mpc) (world-ball WORLD-mpc)) #true)
+(check-expect (touching-paddle? (world-paddle WORLD-rpc) (world-ball WORLD-rpc)) #true)
+(check-expect (touching-paddle? (world-paddle WORLD-twc) (world-ball WORLD-twc)) #false)
 
-(define (touching-paddle? w)
-  (and (= (ball-y (world-ball w)) (- PADDLE-Y (/ PADDLE-HEIGHT 2)))
-       (<= (- (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2))
-           (ball-x (world-ball w))
-           (+ (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)))))
+(define (touching-paddle? p b)
+  (and (= (ball-y b) (- PADDLE-Y (/ PADDLE-HEIGHT 2)))
+       (<= (- p (/ PADDLE-WIDTH 2))
+           (ball-x b)
+           (+ p (/ PADDLE-WIDTH 2)))))
 
 ;; ------------------- ENDING FUNCTIONS -----------------------------------------
 ;; dead? : World -> Boolean
