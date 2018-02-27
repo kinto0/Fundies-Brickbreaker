@@ -96,7 +96,8 @@
                              (make-brick 2 180 50)))
 
 ;; A World is a (make-world Ball Paddle List-of-Bricks Boolean)
-;; Interp: __DO THIS LATER PLEASE_________________________________________________________________________
+;; Interp: The ball is the ball on the screen, the paddle is the paddle, the lob is the
+;; list of bricks, and the boolean is whether the ball has been launched yet
 (define-struct world (ball paddle lob launched))
 
 (define WORLD0 (make-world INITIAL-BALL PADDLE1 INITIAL-BRICKS #false))
@@ -180,10 +181,10 @@
 ;; launch-ball-world : World -> World
 ;; Creates a world in which the ball is launched
 (check-expect (launch-ball-world WORLD0)
-              (move-ball (make-world (launch-ball (world-ball WORLD0) (paddle-x (world-paddle WORLD0)))
+              (make-world (launch-ball (world-ball WORLD0) (paddle-x (world-paddle WORLD0)))
                                      (world-paddle WORLD0)
                                      (world-lob WORLD0)
-                                     #true)))
+                                     #true))
 
 (define (launch-ball-world w)
   (move-ball (make-world (launch-ball (world-ball w) (paddle-x (world-paddle w)))
@@ -198,11 +199,12 @@
               (draw-ball INITIAL-BALL (draw-bricks INITIAL-BRICKS (draw-paddle PADDLE1))))
 
 (define (draw-world w)
-  (draw-ball (world-ball w) (draw-bricks INITIAL-BRICKS (draw-paddle (world-paddle w)))))
+  (draw-ball (world-ball w) (draw-bricks (world-lob w) (draw-paddle (world-paddle w)))))
 
 ;; Draw-ball : Ball, Image -> Image
 ;; draws ball over current image
-(check-expect (draw-ball INITIAL-BALL BG) (place-image THE-BALL (ball-x INITIAL-BALL) (ball-y INITIAL-BALL) BG))
+(check-expect (draw-ball INITIAL-BALL BG)
+              (place-image THE-BALL (ball-x INITIAL-BALL) (ball-y INITIAL-BALL) BG))
 
 (define (draw-ball ball img)
   (place-image THE-BALL (ball-x ball) (ball-y ball) img))
@@ -272,8 +274,10 @@
 
 ;; tick-world : World -> World
 ;; Checks if the ball has been launched yet
-(check-expect (tick-world WORLD0) (make-world (launch-ball INITIAL-BALL (/ WIDTH 2)) PADDLE1 INITIAL-BRICKS #true))
-(check-expect (tick-world WORLD-nc) (move-ball-helper WORLD-nc))
+(check-expect (tick-world WORLD0)
+              (make-world (launch-ball INITIAL-BALL (/ WIDTH 2)) PADDLE1 INITIAL-BRICKS #true))
+(check-expect (tick-world WORLD-nc)
+              (move-ball-helper WORLD-nc))
 
 (define (tick-world w)
   (cond
@@ -293,9 +297,12 @@
 (check-expect (move-ball-helper WORLD-tbc) (flip-y WORLD-tbc))
 (check-expect (move-ball-helper WORLD-bbc) (flip-y WORLD-bbc))
 
-(check-expect (move-ball-helper WORLD-lpc) (launch-ball INITIAL-BALL (paddle-x (world-paddle WORLD-lpc))))
-(check-expect (move-ball-helper WORLD-mpc) (launch-ball INITIAL-BALL (paddle-x (world-paddle WORLD-mpc))))
-(check-expect (move-ball-helper WORLD-rpc) (launch-ball INITIAL-BALL (paddle-x (world-paddle WORLD-rpc))))
+(check-expect (move-ball-helper WORLD-lpc)
+              (launch-ball INITIAL-BALL (paddle-x (world-paddle WORLD-lpc))))
+(check-expect (move-ball-helper WORLD-mpc)
+              (launch-ball INITIAL-BALL (paddle-x (world-paddle WORLD-mpc))))
+(check-expect (move-ball-helper WORLD-rpc)
+              (launch-ball INITIAL-BALL (paddle-x (world-paddle WORLD-rpc))))
 
 
 (define (move-ball-helper w)
@@ -320,23 +327,54 @@
     [else (move-ball w)]))
 
 (define (flip-x w)
-  (move-ball (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (* -1 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w))))
+  (move-ball (make-world
+              (make-ball (ball-x (world-ball w))
+                         (ball-y (world-ball w))
+                         (* -1 (ball-vx (world-ball w)))
+                         (ball-vy (world-ball w)))
+              (world-paddle w)
+              (world-lob w)
+              (world-launched w))))
 
 (define (flip-y w)
-  (move-ball (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (ball-vx (world-ball w)) (* -1 (ball-vy (world-ball w)))) (world-paddle w) (world-lob w) (world-launched w))))
+  (move-ball (make-world
+              (make-ball
+               (ball-x (world-ball w))
+               (ball-y (world-ball w))
+               (ball-vx (world-ball w))
+               (* -1 (ball-vy (world-ball w))))
+              (world-paddle w)
+              (world-lob w)
+              (world-launched w))))
 
 (define (bounce-r w)
-  (move-ball (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (+ 20 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w))))
+  (move-ball (make-world
+              (make-ball
+               (ball-x (world-ball w))
+               (ball-y (world-ball w))
+               (+ 20 (ball-vx (world-ball w)))
+               (ball-vy (world-ball w)))
+              (world-paddle w)
+              (world-lob w)
+              (world-launched w))))
 
 (define (bounce-l w)
-  (move-ball (make-world (make-ball (ball-x (world-ball w)) (ball-y (world-ball w)) (- 20 (ball-vx (world-ball w))) (ball-vy (world-ball w))) (world-paddle w) (world-lob w) (world-launched w))))
+  (move-ball (make-world
+              (make-ball
+               (ball-x (world-ball w))
+               (ball-y (world-ball w))
+               (- 20 (ball-vx (world-ball w)))
+               (ball-vy (world-ball w)))
+              (world-paddle w)
+              (world-lob w)
+              (world-launched w))))
 
 (define (remove-brick w brick)
-  (cond
-    [(empty? (world-lob w)) w]
-    [else (cond
-          [(equal? brick (first (world-lob w))) (make-world (world-ball w) (world-paddle w) (rest (world-lob w)) (world-launched w))]
-          [else (remove-brick (make-world (world-ball w) (world-paddle w) (rest (world-lob w)) (world-launched w)) brick)])]))
+  (make-world (world-ball w)
+              (world-paddle w)
+              (remove brick (world-lob w))
+              (world-launched w)))
+
 
 ;; collision? : World -> Boolean
 ;; Determines if there is a collision with the ball
@@ -344,11 +382,15 @@
 (check-expect (collision? WORLD-lwc) #true)
 
 (define (collision? w)
-  (or (brick? (within-brick (world-lob w) (world-ball w))) (touching-wall? w) (touching-paddle? w)))
+  (or
+   (brick? (within-brick (world-lob w) (world-ball w)))
+   (touching-wall? w)
+   (touching-paddle? w)))
 
 ;; move-ball : World -> World
 ;; Moves the ball
-(check-expect (move-ball WORLD-nc) (make-world (make-ball 101 151 1 1) PADDLE1 INITIAL-BRICKS #true))
+(check-expect (move-ball WORLD-nc)
+              (make-world (make-ball 101 151 1 1) PADDLE1 INITIAL-BRICKS #true))
 
 (define (move-ball w)
   (make-world (make-ball (+ (ball-x (world-ball w)) (ball-vx (world-ball w)))
@@ -370,7 +412,10 @@
 (check-expect (touching-wall? WORLD-lbc) #false)
 
 (define (touching-wall? w)
-  (or (touching-wall-r? w) (touching-wall-l? w) (touching-wall-t? w)))
+  (or
+   (touching-wall-r? w)
+   (touching-wall-l? w)
+   (touching-wall-t? w)))
 
 ;; touching-wall-r? : World -> Boolean
 ;; Determines if the ball is touching the right wall
@@ -419,7 +464,9 @@
 (define (within-brick lob ball)
   (cond
     [(empty? lob) '()]
-    [(cons? lob) (if (touching-single-brick? (first lob) ball) (first lob) (within-brick (rest lob) ball))]))
+    [(cons? lob) (if (touching-single-brick? (first lob) ball)
+                     (first lob)
+                     (within-brick (rest lob) ball))]))
 
 ;; touching-single-brick : Brick Ball -> Boolean
 ;; Checks if a ball is touching a single brick
@@ -433,7 +480,10 @@
 
 
 (define (touching-single-brick? brick ball)
-  (and (within-brick-t? brick ball) (within-brick-b? brick ball) (within-brick-l? brick ball) (within-brick-r? brick ball)))
+  (and (within-brick-t? brick ball)
+       (within-brick-b? brick ball)
+       (within-brick-l? brick ball)
+       (within-brick-r? brick ball)))
 
 ;; within-brick-l? : Brick Ball -> Boolean
 ;; Checks if the ball is within the brick's left boundary
