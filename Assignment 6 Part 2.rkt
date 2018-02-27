@@ -319,13 +319,7 @@
 
 ;; move-left : World -> World
 ;; Moves paddle to the right
-(check-expect (move-left WORLD0)
-              (make-world (make-ball (- 100 PADDLE-SPEED) 177 BALL-SPEED 0)
-                          (make-paddle (- 100 PADDLE-SPEED))
-                          INITIAL-BRICKS
-                          #false
-                          3
-                          0))
+(check-expect (move-left WORLD0) (move-ball-and-paddle-helper WORLD0 #true #true))
 
 (define (move-left w)
   (cond
@@ -333,22 +327,46 @@
     [(not (world-launched w)) (move-ball-and-paddle-helper w #true #true)]
     [else (move-ball-and-paddle-helper w #true #false)]))
 
+;; move-ball-and-paddle-helper : World, Boolean, Boolean -> World
+;; Moves the paddle either with or without the ball
+(check-expect (move-ball-and-paddle-helper WORLD0 #true #true) (make-world (displace-ball INITIAL-BALL #true)
+                                                                           (displace-paddle PADDLE1 #true)
+                                                                           INITIAL-BRICKS
+                                                                           #false
+                                                                           3
+                                                                           0))
+(check-expect (move-ball-and-paddle-helper WORLD0 #true #false) (make-world INITIAL-BALL
+                                                                           (displace-paddle PADDLE1 #true)
+                                                                           INITIAL-BRICKS
+                                                                           #false
+                                                                           3
+                                                                           0))
+
 (define (move-ball-and-paddle-helper w left? ball?)
   (cond
-    [ball? (make-world
-            (displace-ball (world-ball w) left?)
-            (displace-paddle (world-paddle w) left?)
-            (world-lob w)
-            (world-launched w)
-            (world-lives w)
-            (world-score w))]
-    [else (make-world
-           (world-ball w)
-           (displace-paddle (world-paddle w) left?)
-           (world-lob w)
-           (world-launched w)
-           (world-lives w)
-           (world-score w))]))
+    [ball? (make-world (displace-ball (world-ball w) left?)
+                       (displace-paddle (world-paddle w) left?)
+                       (world-lob w)
+                       (world-launched w)
+                       (world-lives w)
+                       (world-score w))]
+    [else (make-world (world-ball w)
+                      (displace-paddle (world-paddle w) left?)
+                      (world-lob w)
+                      (world-launched w)
+                      (world-lives w)
+                      (world-score w))]))
+
+;; displace-ball : Ball, Boolean -> Ball
+;; Moves the ball either left or right depending on the given boolean
+(check-expect (displace-ball BALL-nc #true) (make-ball (- 100 PADDLE-SPEED)
+                                                       150
+                                                       1
+                                                       1))
+(check-expect (displace-ball BALL-nc #false) (make-ball (+ 100 PADDLE-SPEED)
+                                                       150
+                                                       1
+                                                       1))
 
 (define (displace-ball ball left?)
   (cond
@@ -360,6 +378,11 @@
                      (ball-y ball)
                      (ball-vx ball)
                      (ball-vy ball))]))
+
+;; displace-paddle : Paddle, Boolean -> Paddle
+;; Moves the paddle either left or right depending on the given boolean
+(check-expect (displace-paddle PADDLE1 #true) (make-paddle (- 100 PADDLE-SPEED)))
+(check-expect (displace-paddle PADDLE1 #false) (make-paddle (+ 100 PADDLE-SPEED)))
 
 (define (displace-paddle paddle left?)
   (cond
