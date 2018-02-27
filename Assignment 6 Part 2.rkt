@@ -304,26 +304,18 @@
 (check-expect (move-ball-helper WORLD-rpc)
               (launch-ball INITIAL-BALL (paddle-x (world-paddle WORLD-rpc))))
 
-
 (define (move-ball-helper w)
   (cond
     [(collision? w)
      (cond
        [(touching-wall? w) (cond
-                             [(touching-wall-r? w) (flip-x w)]
-                             [(touching-wall-l? w) (flip-x w)]
+                             [(touching-wall-x? w) (flip-x w)]
                              [(touching-wall-t? w) (flip-y w)])]
        [(brick? (within-brick (world-lob w) (world-ball w))) (cond
-                                                               [(touching-brick-l? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-x w) (within-brick (world-lob w) (world-ball w)))]
-                                                               [(touching-brick-r? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-x w) (within-brick (world-lob w) (world-ball w)))]
-                                                               [(touching-brick-t? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-y w) (within-brick (world-lob w) (world-ball w)))]
-                                                               [(touching-brick-b? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-y w) (within-brick (world-lob w) (world-ball w)))]
+                                                               [(within-brick-y? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-y w) (within-brick (world-lob w) (world-ball w)))]
+                                                               [(within-brick-x? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-x w) (within-brick (world-lob w) (world-ball w)))]
                                                                [else w])]
        [(touching-paddle? w) (launch-ball-world w)])]
-
-
-    
-    ;;JUST USE LAUNCH BALL FOR ABOVE -GWEN
     [else (move-ball w)]))
 
 (define (flip-x w)
@@ -343,28 +335,6 @@
                (ball-y (world-ball w))
                (ball-vx (world-ball w))
                (* -1 (ball-vy (world-ball w))))
-              (world-paddle w)
-              (world-lob w)
-              (world-launched w))))
-
-(define (bounce-r w)
-  (move-ball (make-world
-              (make-ball
-               (ball-x (world-ball w))
-               (ball-y (world-ball w))
-               (+ 20 (ball-vx (world-ball w)))
-               (ball-vy (world-ball w)))
-              (world-paddle w)
-              (world-lob w)
-              (world-launched w))))
-
-(define (bounce-l w)
-  (move-ball (make-world
-              (make-ball
-               (ball-x (world-ball w))
-               (ball-y (world-ball w))
-               (- 20 (ball-vx (world-ball w)))
-               (ball-vy (world-ball w)))
               (world-paddle w)
               (world-lob w)
               (world-launched w))))
@@ -401,9 +371,6 @@
               (world-lob w)
               (world-launched w)))
 
-
-
-
 ;; ----------------- TOUCHING WALL??? ------------------------------------
 
 ;; touching-wall : World -> Boolean
@@ -413,25 +380,17 @@
 
 (define (touching-wall? w)
   (or
-   (touching-wall-r? w)
-   (touching-wall-l? w)
+   (touching-wall-x? w)
    (touching-wall-t? w)))
 
-;; touching-wall-r? : World -> Boolean
-;; Determines if the ball is touching the right wall
-(check-expect (touching-wall-r? WORLD-lwc) #false)
-(check-expect (touching-wall-r? WORLD-rwc) #true)
+;; touching-wall-z? : World -> Boolean
+;; Determines if the ball is touching the right or left wall
+(check-expect (touching-wall-x? WORLD-lwc) #false)
+(check-expect (touching-wall-x? WORLD-rwc) #true)
 
-(define (touching-wall-r? w)
-  (>= (+ (ball-x (world-ball w)) BALL-RADIUS) WIDTH))
-
-;; touching-wall-l? : World -> Boolean
-;; Determines if the ball is touching the left wall
-(check-expect (touching-wall-l? WORLD-rwc) #false)
-(check-expect (touching-wall-l? WORLD-lwc) #true)
-
-(define (touching-wall-l? w)
-  (<= (- (ball-x (world-ball w)) BALL-RADIUS) 0))
+(define (touching-wall-x? w)
+  (or (>= (+ (ball-x (world-ball w)) BALL-RADIUS) WIDTH)
+      (<= (- (ball-x (world-ball w)) BALL-RADIUS) 0)))
 
 ;; touching-wall-t? : World -> Boolean
 ;; Determines if the ball is touching the top wall
@@ -480,79 +439,16 @@
 
 
 (define (touching-single-brick? brick ball)
-  (and (within-brick-t? brick ball)
-       (within-brick-b? brick ball)
-       (within-brick-l? brick ball)
-       (within-brick-r? brick ball)))
+  (and (within-brick-x? brick ball)
+       (within-brick-y? brick ball)))
 
-;; within-brick-l? : Brick Ball -> Boolean
-;; Checks if the ball is within the brick's left boundary
-(check-expect (within-brick-l? BRICK-EX BALL-lwc) #false)
-(check-expect (within-brick-l? BRICK-EX BALL-lbc) #true)
-(check-expect (within-brick-l? BRICK-EX BALL-rbc) #true)
+(define (within-brick-y? brick ball)
+  (and (<= (- (brick-y brick) (/ BRICK-HEIGHT 2)) (+ (ball-y ball) BALL-RADIUS))
+       (>= (+ (brick-y brick) (/ BRICK-HEIGHT 2)) (- (ball-y ball) BALL-RADIUS))))
 
-
-(define (within-brick-l? brick ball)
-  (<= (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS)))
-
-;; within-brick-r? : Brick Ball -> Boolean
-;; Checks if the ball is within the brick's right boundary
-(check-expect (within-brick-r? BRICK-EX BALL-rwc) #false)
-(check-expect (within-brick-r? BRICK-EX BALL-rbc) #true)
-
-(define (within-brick-r? brick ball)
-  (>= (+ (brick-x brick) (/ BRICK-WIDTH 2)) (- (ball-x ball) BALL-RADIUS)))
-
-;; within-brick-b? : Brick Ball -> Boolean
-;; Checks if the ball is within the brick's bottom boundary
-(check-expect (within-brick-b? BRICK-EX BALL-lwc) #false)
-(check-expect (within-brick-b? BRICK-EX BALL-bbc) #true)
-
-(define (within-brick-b? brick ball)
-  (>= (+ (brick-y brick) (/ BRICK-HEIGHT 2)) (- (ball-y ball) BALL-RADIUS)))
-
-;; within-brick-t? : Brick Ball -> Boolean
-;; Checks if the ball is within the brick's top boundary
-(check-expect (within-brick-t? BRICK-EX BALL-twc) #false)
-(check-expect (within-brick-t? BRICK-EX BALL-tbc) #true)
-
-(define (within-brick-t? brick ball)
-  (<= (- (brick-y brick) (/ BRICK-HEIGHT 2)) (+ (ball-y ball) BALL-RADIUS)))
-
-
-
-;; touching-brick-l? : Brick Ball -> Boolean
-;; Checks if the ball is touching the brick's left boundary
-(check-expect (touching-brick-l? BRICK-EX BALL-lwc) #false)
-(check-expect (touching-brick-l? BRICK-EX BALL-lbc) #true)
-(check-expect (touching-brick-l? BRICK-EX BALL-rbc) #false)
-
-(define (touching-brick-l? brick ball)
-  (= (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS)))
-
-;; touching-brick-r? : Brick Ball -> Boolean
-;; Checks if the ball is touching the brick's right boundary
-(check-expect (touching-brick-r? BRICK-EX BALL-rwc) #false)
-(check-expect (touching-brick-r? BRICK-EX BALL-rbc) #true)
-
-(define (touching-brick-r? brick ball)
-  (= (+ (brick-x brick) (/ BRICK-WIDTH 2)) (- (ball-x ball) BALL-RADIUS)))
-
-;; touching-brick-b? : Brick Ball -> Boolean
-;; Checks if the ball is touching the brick's bottom boundary
-(check-expect (touching-brick-b? BRICK-EX BALL-lwc) #false)
-(check-expect (touching-brick-b? BRICK-EX BALL-bbc) #true)
-
-(define (touching-brick-b? brick ball)
-  (= (+ (brick-y brick) (/ BRICK-HEIGHT 2)) (- (ball-y ball) BALL-RADIUS)))
-
-;; touching-brick-t? : Brick Ball -> Boolean
-;; Checks if the ball is touching the brick's top boundary
-(check-expect (touching-brick-t? BRICK-EX BALL-twc) #false)
-(check-expect (touching-brick-t? BRICK-EX BALL-tbc) #true)
-
-(define (touching-brick-t? brick ball)
-  (= (- (brick-y brick) (/ BRICK-HEIGHT 2)) (+ (ball-y ball) BALL-RADIUS)))
+(define (within-brick-x? brick ball)
+  (and (>= (+ (brick-x brick) (/ BRICK-WIDTH 2)) (- (ball-x ball) BALL-RADIUS))
+       (<= (- (brick-x brick) (/ BRICK-WIDTH 2)) (+ (ball-x ball) BALL-RADIUS))))
 
 ;; ------------------ TOUCHING PADDLE??????? -------------------------------
 (check-expect (touching-paddle? WORLD-lpc) #true)
