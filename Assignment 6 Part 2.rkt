@@ -80,6 +80,14 @@
 
 (define PADDLE1 (make-paddle 100))
 
+(define PADDLE-lwc-f (make-paddle (+ (/ PADDLE-WIDTH 2) 1)))
+(define PADDLE-lwc-t (make-paddle (+ (/ PADDLE-WIDTH 2) 0)))
+(define PADDLE-lwc (make-paddle (- 0 100)))
+
+(define PADDLE-rwc-f (make-paddle (- WIDTH 1 (/ PADDLE-WIDTH 2))))
+(define PADDLE-rwc-t (make-paddle (- WIDTH (/ PADDLE-WIDTH 2))))
+(define PADDLE-rwc (make-paddle (+ WIDTH 100)))
+
 ;; A Brick is a (make-brick Number Number Number)
 (define-struct brick (num x y))
 
@@ -153,8 +161,6 @@
 (define WORLD-lpc (make-world BALL-lpc PADDLE1 INITIAL-BRICKS #true LIVES 0))
 (define WORLD-mpc (make-world BALL-mpc PADDLE1 INITIAL-BRICKS #true LIVES 0))
 (define WORLD-rpc (make-world BALL-rpc PADDLE1 INITIAL-BRICKS #true LIVES 0))
-
-
 
 (define (main _)
   (big-bang WORLD0
@@ -268,17 +274,17 @@
 
 ;; draw-lives : Number, Image -> Image
 ;; Displays the number of lives over current image
-(check-expect (draw-lives LIVES BG) (place-image (text (number->string LIVES) 14 "black") 10 150 BG))
+(check-expect (draw-lives LIVES BG) (place-image (text (string-append (number->string LIVES) "❤") 14 "red") 20 150 BG))
 
 (define (draw-lives lives img)
-  (place-image (text (number->string lives) 14 "black") 10 150 img))
+  (place-image (text (string-append (number->string lives) "❤") 14 "red") 20 150 img))
 
 ;; draw-score : Number, Image -> Image
 ;; Displays the score over current image
-(check-expect (draw-score 0 BG) (place-image (text (number->string 0) 14 "black") 190 150 BG))
+(check-expect (draw-score 0 BG) (place-image (text (number->string 0) 14 "black") 180 150 BG))
 
 (define (draw-score score img)
-  (place-image (text (number->string score) 14 "black") 190 150 img))
+  (place-image (text (number->string score) 14 "black") 180 150 img))
 
 ;; draw-paddle : Paddle -> Image
 ;; Draws the paddle on an image
@@ -302,32 +308,13 @@
 
 ;; move-right : World -> World
 ;; Moves paddle to the right
-(check-expect (move-right WORLD0)
-              (make-world (make-ball (+ 100 PADDLE-SPEED) 177 BALL-SPEED 0)
-                          (make-paddle (+ 100 PADDLE-SPEED))
-                          INITIAL-BRICKS
-                          #false
-                          LIVES
-                          0))
+(check-expect (move-right WORLD0) (move-ball-and-paddle-helper WORLD0 #false #true))
 
 (define (move-right w)
   (cond
-    [(>= (+ (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)) WIDTH) w]
-    [(not (world-launched w)) (make-world (make-ball (+ (ball-x (world-ball w)) PADDLE-SPEED)
-                                                     (ball-y (world-ball w))
-                                                     (ball-vx (world-ball w))
-                                                     (ball-vy (world-ball w)))
-                                          (make-paddle (+ (paddle-x (world-paddle w)) PADDLE-SPEED))
-                                          (world-lob w)
-                                          (world-launched w)
-                                          (world-lives w)
-                                          (world-score w))]
-    [else (make-world (world-ball w)
-                      (make-paddle (+ (paddle-x (world-paddle w)) PADDLE-SPEED))
-                      (world-lob w)
-                      (world-launched w)
-                      (world-lives w)
-                      (world-score w))]))
+    [(paddle-outside-screen-r? (world-paddle w)) w]
+    [(not (world-launched w)) (move-ball-and-paddle-helper w #false #true)]
+    [else (move-ball-and-paddle-helper w #false #false)]))
 
 
 ;; move-left : World -> World
@@ -342,22 +329,63 @@
 
 (define (move-left w)
   (cond
-    [(<= (- (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)) 0) w]
-    [(not (world-launched w)) (make-world (make-ball (- (ball-x (world-ball w)) PADDLE-SPEED)
-                                                     (ball-y (world-ball w))
-                                                     (ball-vx (world-ball w))
-                                                     (ball-vy (world-ball w)))
-                                          (make-paddle (- (paddle-x (world-paddle w)) PADDLE-SPEED))
-                                          (world-lob w)
-                                          (world-launched w)
-                                          (world-lives w)
-                                          (world-score w))]
-    [else (make-world (world-ball w)
-                      (make-paddle (- (paddle-x (world-paddle w)) PADDLE-SPEED))
-                      (world-lob w)
-                      (world-launched w)
-                      (world-lives w)
-                      (world-score w))]))
+    [(paddle-outside-screen-l? (world-paddle w)) w]
+    [(not (world-launched w)) (move-ball-and-paddle-helper w #true #true)]
+    [else (move-ball-and-paddle-helper w #true #false)]))
+
+(define (move-ball-and-paddle-helper w left? ball?)
+  (cond
+    [ball? (make-world
+            (displace-ball (world-ball w) left?)
+            (displace-paddle (world-paddle w) left?)
+            (world-lob w)
+            (world-launched w)
+            (world-lives w)
+            (world-score w))]
+    [else (make-world
+           (world-ball w)
+           (displace-paddle (world-paddle w) left?)
+           (world-lob w)
+           (world-launched w)
+           (world-lives w)
+           (world-score w))]))
+
+(define (displace-ball ball left?)
+  (cond
+    [left? (make-ball (- (ball-x ball) PADDLE-SPEED)
+                      (ball-y ball)
+                      (ball-vx ball)
+                      (ball-vy ball))]
+    [else (make-ball (+ (ball-x ball) PADDLE-SPEED)
+                     (ball-y ball)
+                     (ball-vx ball)
+                     (ball-vy ball))]))
+
+(define (displace-paddle paddle left?)
+  (cond
+    [left? (make-paddle (- (paddle-x paddle) PADDLE-SPEED))]
+    [else (make-paddle (+ (paddle-x paddle) PADDLE-SPEED))]))
+
+;; paddle-outside-screen-l? : Paddle -> Boolean
+;; Checks whether the paddle is outside the screen to the left
+(check-expect (paddle-outside-screen-l? (make-paddle WIDTH)) #false)
+(check-expect (paddle-outside-screen-l? (make-paddle (+ (/ PADDLE-WIDTH 2) 1))) #false)
+(check-expect (paddle-outside-screen-l? (make-paddle (+ (/ PADDLE-WIDTH 2) 0))) #true)
+(check-expect (paddle-outside-screen-l? (make-paddle (- 0 100))) #true)
+
+(define (paddle-outside-screen-l? p)
+  (<= (- (paddle-x p) (/ PADDLE-WIDTH 2)) 0))
+
+;; paddle-outside-screen-r? : Paddle -> Boolean
+;; Checks whether the paddle is outside the screen to the right
+(check-expect (paddle-outside-screen-r? (make-paddle 0)) #false)
+(check-expect (paddle-outside-screen-r? (make-paddle (- WIDTH 1 (/ PADDLE-WIDTH 2)))) #false)
+(check-expect (paddle-outside-screen-r? (make-paddle (- WIDTH (/ PADDLE-WIDTH 2)))) #true)
+(check-expect (paddle-outside-screen-r? (make-paddle (+ WIDTH 100))) #true)
+
+(define (paddle-outside-screen-r? p)
+  (>= (+ (paddle-x p) (/ PADDLE-WIDTH 2)) WIDTH))
+
 
 ;; tick-world : World -> World
 ;; Checks if the ball has been launched yet
