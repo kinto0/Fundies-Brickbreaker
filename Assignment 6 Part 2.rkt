@@ -29,6 +29,7 @@
 
 
 #|--- DATA DEFINITIONS ---|#
+
 ;;A Ball is a (make-ball Number Number Number Number)
 (define-struct ball (x y vx vy))
 
@@ -36,6 +37,12 @@
 ; - the second Number is the ball's y-coordinate
 ; - the third Number is the ball's x-velocity
 ; - the fourth Number is the ball's y-velocity
+
+;; Ball -> ???
+(define (ball-temp b)
+  ( ... (ball-x b) ... (ball-y b) ... (ball-vx b) ... (ball-vy b) ... ))
+
+;; Initial ball for world
 (define INITIAL-BALL (make-ball (/ WIDTH 2)
                                 (- HEIGHT (* 2 PADDLE-HEIGHT) (/ BALL-RADIUS 2))
                                 BALL-SPEED
@@ -62,22 +69,35 @@
 (define BALL-rpc (make-ball 120 (- PADDLE-Y (/ PADDLE-HEIGHT 2)) 1 1))
 
 ;; A Paddle is a (make-paddle Number)
-
 (define-struct paddle (x))
+
+; - Where x is the x position of paddle
+
+(define (paddle-temp p)
+  ( ... (paddle-x p) ... ))
+
 (define PADDLE1 (make-paddle 100))
 
 ;; A Brick is a (make-brick Number Number Number)
-
 (define-struct brick (num x y))
 
 ; - where the first Number is the brick's health
 ; - the second number is the brick's x coordinate
 ; - the third number is the brick's y coordinate
+
+(define (brick-temp b)
+  ( ... (brick-x b) ... (brick-y b) ... ))
+
 (define BRICK-EX (make-brick 2 100 30))
 
 ;; A List-of-Bricks is one of:
 ; - '()
 ; - (cons Brick List-of-Bricks)
+
+(define (lob-temp lob)
+  (cond
+    [(empty? lob) ... ]
+    [(cons? lob) ... ]))
 
 (define INITIAL-BRICKS (list (make-brick 2 20 10)
                              (make-brick 2 60 10)
@@ -96,9 +116,21 @@
                              (make-brick 2 180 50)))
 
 ;; A World is a (make-world Ball Paddle List-of-Bricks Boolean)
-;; Interp: The ball is the ball on the screen, the paddle is the paddle, the lob is the
-;; list of bricks, and the boolean is whether the ball has been launched yet
 (define-struct world (ball paddle lob launched))
+
+;; Where the:
+;; - ball is the ball on the screen
+;; - the paddle is the paddle
+;; - the lob is the list of bricks
+;; - the boolean is whether the ball has been launched yet
+
+(define (world-temp w)
+  ( ... (ball-temp (world-ball w)) ...
+        (paddle-temp (world-paddle w)) ...
+        (lob-temp (world-lob w)) ...
+        (world-launched w) ...
+        (world-lives w) ...
+        (world-score w) ... ) ... )
 
 (define WORLD0 (make-world INITIAL-BALL PADDLE1 INITIAL-BRICKS #false))
 
@@ -141,7 +173,7 @@
 ;; new-x-velocity : Ball Number -> Number
 ;; Produces the new x velocity of a ball that launched off a paddle with this x-coordinate
 (check-expect (new-x-velocity INITIAL-BALL 100) 0)
-(check-expect (new-x-velocity (make-ball 60 190 3 4) 100)
+(check-expect (new-x-velocity (make-ball 60 PADDLE-Y 3 4) 100)
               (inexact->exact (* 4.75 -40/26)))
 
 (define (new-x-velocity ball x)
@@ -153,7 +185,7 @@
 ;; new-y-velocity : Ball Number -> Number
 ;; Produces the new y velocity of a ball that launched off a paddle with this x-coordinate
 (check-expect (new-y-velocity INITIAL-BALL 100) -4)
-(check-expect (new-y-velocity (make-ball 60 190 3 4) 100)
+(check-expect (new-y-velocity (make-ball 60 PADDLE-Y 3 4) 100)
               (inexact->exact (* -5 (sqrt (- 1 (sqr (* .95 -40/26)))))))
 
 (define (new-y-velocity ball x)
@@ -166,9 +198,9 @@
 ;; Launch ball off paddle with this x-coordinate
 (check-expect (launch-ball INITIAL-BALL 100)
               (make-ball 100 173 0 -4))
-(check-expect (launch-ball (make-ball 60 190 3 4) 100)
+(check-expect (launch-ball (make-ball 60 PADDLE-Y 3 4) 100)
               (make-ball (+ 60 (inexact->exact (* 4.75 -40/26)))
-                         (+ 190 (inexact->exact (* -5 (sqrt (- 1 (sqr (* .95 -40/26)))))))
+                         (+ PADDLE-Y (inexact->exact (* -5 (sqrt (- 1 (sqr (* .95 -40/26)))))))
                          (inexact->exact (* 4.75 -40/26))
                          (inexact->exact (* -5 (sqrt (- 1 (sqr (* .95 -40/26))))))))
 
@@ -182,15 +214,15 @@
 ;; Creates a world in which the ball is launched
 (check-expect (launch-ball-world WORLD0)
               (make-world (launch-ball (world-ball WORLD0) (paddle-x (world-paddle WORLD0)))
-                                     (world-paddle WORLD0)
-                                     (world-lob WORLD0)
-                                     #true))
+                          (world-paddle WORLD0)
+                          (world-lob WORLD0)
+                          #true))
 
 (define (launch-ball-world w)
-  (move-ball (make-world (launch-ball (world-ball w) (paddle-x (world-paddle w)))
+  (make-world (launch-ball (world-ball w) (paddle-x (world-paddle w)))
                          (world-paddle w)
                          (world-lob w)
-                         #true)))
+                         #true))
 
               
 ;; Draw-world : World -> Image
@@ -223,7 +255,7 @@
                                  (draw-bricks (rest bricks) img))]))
 ;; draw-paddle : Paddle -> Image
 ;; draws the paddle on an image
-(check-expect (draw-paddle PADDLE1) (place-image THE-PADDLE (paddle-x PADDLE1) 190 BG))
+(check-expect (draw-paddle PADDLE1) (place-image THE-PADDLE (paddle-x PADDLE1) PADDLE-Y BG))
 
 (define (draw-paddle paddle)
   (place-image THE-PADDLE (paddle-x paddle) PADDLE-Y BG))
@@ -238,6 +270,7 @@
   (cond
     [(key=? key "left") (move-left w)]
     [(key=? key "right") (move-right w)]
+    [(key=? key " ") (launch-ball-world w)]
     [else w]))
 
 ;; move-right : World -> World
@@ -249,12 +282,20 @@
                           (world-launched WORLD0)))
 
 (define (move-right w)
-  (if (< (paddle-x (world-paddle w)) (- WIDTH (/ PADDLE-WIDTH 2)))
-      (make-world (world-ball w)
-                  (make-paddle (+ (paddle-x (world-paddle w)) PADDLE-SPEED))
-                  (world-lob w)
-                  (world-launched w))
-      w))
+  (cond
+    [(>= (+ (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)) WIDTH) w]
+    [(not (world-launched w)) (make-world (make-ball (+ (ball-x (world-ball w)) PADDLE-SPEED)
+                                                     (ball-y (world-ball w))
+                                                     (ball-vx (world-ball w))
+                                                     (ball-vy (world-ball w)))
+                                          (make-paddle (+ (paddle-x (world-paddle w)) PADDLE-SPEED))
+                                          (world-lob w)
+                                          (world-launched w))]
+    [else (make-world (world-ball w)
+                      (make-paddle (+ (paddle-x (world-paddle w)) PADDLE-SPEED))
+                      (world-lob w)
+                      (world-launched w))]))
+
 
 ;; move-left : World -> World
 ;; Moves paddle to the right
@@ -265,12 +306,19 @@
                           (world-launched WORLD0)))
 
 (define (move-left w)
-  (if (< (/ PADDLE-WIDTH 2) (paddle-x (world-paddle w)))
-      (make-world (world-ball w)
-                  (make-paddle (- (paddle-x (world-paddle w)) PADDLE-SPEED))
-                  (world-lob w)
-                  (world-launched w))
-      w))
+  (cond
+    [(<= (- (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)) 0) w]
+    [(not (world-launched w)) (make-world (make-ball (- (ball-x (world-ball w)) PADDLE-SPEED)
+                                                     (ball-y (world-ball w))
+                                                     (ball-vx (world-ball w))
+                                                     (ball-vy (world-ball w)))
+                                          (make-paddle (- (paddle-x (world-paddle w)) PADDLE-SPEED))
+                                          (world-lob w)
+                                          (world-launched w))]
+    [else (make-world (world-ball w)
+                      (make-paddle (- (paddle-x (world-paddle w)) PADDLE-SPEED))
+                      (world-lob w)
+                      (world-launched w))]))
 
 ;; tick-world : World -> World
 ;; Checks if the ball has been launched yet
@@ -282,8 +330,7 @@
 (define (tick-world w)
   (cond
     [(world-launched w) (move-ball-helper w)]
-    [(not (world-launched w))
-     (make-world (launch-ball INITIAL-BALL (/ WIDTH 2)) (world-paddle w) (world-lob w) #true)]))
+    [(not (world-launched w)) w]))
 
 ;; move-ball : World -> World
 ;; Checks if there is a collision or not and changes ball direction if nececssary
@@ -459,8 +506,7 @@
 (define (touching-paddle? w)
   (and (= (ball-y (world-ball w)) (- PADDLE-Y (/ PADDLE-HEIGHT 2)))
        (<= (- (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2))
-           (- (ball-x (world-ball w)) BALL-RADIUS)
-           (+ (ball-x (world-ball w)) BALL-RADIUS)
+           (ball-x (world-ball w))
            (+ (paddle-x (world-paddle w)) (/ PADDLE-WIDTH 2)))))
 
 
