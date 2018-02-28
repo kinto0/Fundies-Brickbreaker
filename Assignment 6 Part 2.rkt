@@ -109,9 +109,14 @@
 ;; @Override lob-temp
 (define (generate-bricks x y lob)
   (cond
-    [(> y 0) (append lob (generate-bricks x (sub1 y) (generate-brick-row x
-                                                                         (make-brick 2 (- (/ WIDTH x) 20) (- (* 20 y) 10))
-                                                                         '())))]
+    [(> y 0) (append lob
+                     (generate-bricks x
+                                      (sub1 y)
+                                      (generate-brick-row x
+                                                          (make-brick 2
+                                                                      (- (/ WIDTH x) 20)
+                                                                      (- (* 20 y) 10))
+                                                          '())))]
     [else lob]))
 
 ;; generate-brick-row : Number, Number -> LoB
@@ -120,11 +125,11 @@
 (define (generate-brick-row total brick lob)
   (cond
     [(> total (length lob)) (generate-brick-row total
-                                      (make-brick 2
-                                      (+ (brick-x brick) (/ WIDTH total))
-                                      (brick-y brick))
-                                      (cons brick
-                                            lob))]
+                                                (make-brick 2
+                                                            (+ (brick-x brick) (/ WIDTH total))
+                                                            (brick-y brick))
+                                                (cons brick
+                                                      lob))]
     [else lob]))
 
 ;; CHANGE THIS TO CHANGE BRICK SIZE - BUT BEWARE!!!!! IT WILL MESS UP CHECK EXPECTS
@@ -264,7 +269,11 @@
 ;; Draw-world : World -> Image
 ;; Renders the world onto an image
 (check-expect (draw-world WORLD0)
-              (draw-ball INITIAL-BALL (draw-bricks INITIAL-BRICKS (draw-lives LIVES (draw-score 0 (draw-paddle PADDLE1))))))
+              (draw-ball INITIAL-BALL
+                         (draw-bricks INITIAL-BRICKS
+                                      (draw-lives LIVES
+                                                  (draw-score 0
+                                                              (draw-paddle PADDLE1))))))
 
 (define (draw-world w)
   (draw-ball (world-ball w)
@@ -296,7 +305,12 @@
 
 ;; draw-lives : Number, Image -> Image
 ;; Displays the number of lives over current image
-(check-expect (draw-lives LIVES BG) (place-image (text (string-append (number->string LIVES) "❤") 14 "red") 20 150 BG))
+(check-expect (draw-lives LIVES BG) (place-image (text (string-append (number->string LIVES) "❤")
+                                                       14
+                                                       "red")
+                                                 20
+                                                 150
+                                                 BG))
 
 (define (draw-lives lives img)
   (place-image (text (string-append (number->string lives) "❤") 14 "red") 20 150 img))
@@ -360,18 +374,20 @@
 
 ;; move-ball-and-paddle-helper : World, Boolean, Boolean -> World
 ;; Moves the paddle either with or without the ball
-(check-expect (move-ball-and-paddle-helper WORLD0 #true #true) (make-world (displace-ball INITIAL-BALL #true)
-                                                                           (displace-paddle PADDLE1 #true)
-                                                                           INITIAL-BRICKS
-                                                                           #false
-                                                                           3
-                                                                           0))
-(check-expect (move-ball-and-paddle-helper WORLD0 #true #false) (make-world INITIAL-BALL
-                                                                            (displace-paddle PADDLE1 #true)
-                                                                            INITIAL-BRICKS
-                                                                            #false
-                                                                            3
-                                                                            0))
+(check-expect (move-ball-and-paddle-helper WORLD0 #true #true)
+              (make-world (displace-ball INITIAL-BALL #true)
+                          (displace-paddle PADDLE1 #true)
+                          INITIAL-BRICKS
+                          #false
+                          3
+                          0))
+(check-expect (move-ball-and-paddle-helper WORLD0 #true #false)
+              (make-world INITIAL-BALL
+                          (displace-paddle PADDLE1 #true)
+                          INITIAL-BRICKS
+                          #false
+                          3
+                          0))
 
 (define (move-ball-and-paddle-helper w left? ball?)
   (cond
@@ -459,10 +475,14 @@
 (check-expect (move-ball-helper WORLD-rwc) (flip-x WORLD-rwc))
 (check-expect (move-ball-helper WORLD-twc) (flip-y WORLD-twc))
 
-(check-expect (move-ball-helper WORLD-lbc) (remove-brick (flip-x WORLD-lbc) (within-brick INITIAL-BRICKS BALL-lbc)))
-(check-expect (move-ball-helper WORLD-rbc) (remove-brick (flip-x WORLD-rbc) (within-brick INITIAL-BRICKS BALL-rbc)))
-(check-expect (move-ball-helper WORLD-tbc) (remove-brick (flip-y WORLD-tbc) (within-brick INITIAL-BRICKS BALL-tbc)))
-(check-expect (move-ball-helper WORLD-bbc) (remove-brick (flip-y WORLD-bbc) (within-brick INITIAL-BRICKS BALL-bbc)))
+(check-expect (move-ball-helper WORLD-lbc)
+              (remove-brick (flip-x WORLD-lbc) (within-brick INITIAL-BRICKS BALL-lbc)))
+(check-expect (move-ball-helper WORLD-rbc)
+              (remove-brick (flip-x WORLD-rbc) (within-brick INITIAL-BRICKS BALL-rbc)))
+(check-expect (move-ball-helper WORLD-tbc)
+              (remove-brick (flip-y WORLD-tbc) (within-brick INITIAL-BRICKS BALL-tbc)))
+(check-expect (move-ball-helper WORLD-bbc)
+              (remove-brick (flip-y WORLD-bbc) (within-brick INITIAL-BRICKS BALL-bbc)))
 
 (check-expect (move-ball-helper WORLD-lpc) (launch-ball-world WORLD-lpc))
 (check-expect (move-ball-helper WORLD-mpc) (launch-ball-world WORLD-mpc))
