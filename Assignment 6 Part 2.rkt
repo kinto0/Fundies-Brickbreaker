@@ -51,24 +51,24 @@
                                 0))
 
 ;; Ball for no collision
-(define BALL-nc (make-ball 100 151 1 1))
+(define BALL-nc (make-ball 100 150 1 1))
 
 ;; Balls for wall collisions
 (define BALL-lwc (make-ball 0 150 1 1))
 (define BALL-rwc (make-ball 200 150 1 1))
 (define BALL-twc (make-ball 150 0 1 1))
-(define BALL-bwc (make-ball 150 200 1 1))
+(define BALL-bwc (make-ball 150 200 1 -1))
 
 ;; Balls for brick collisions
 (define BALL-lbc (make-ball 85 30 1 1))
-(define BALL-rbc (make-ball 115 30 1 1))
-(define BALL-bbc (make-ball 100 35 1 1))
+(define BALL-rbc (make-ball 115 30 -1 1))
+(define BALL-bbc (make-ball 100 35 1 -1))
 (define BALL-tbc (make-ball 100 25 1 1))
 
 ;; Balls for paddle collisions
-(define BALL-lpc (make-ball 80 (- PADDLE-Y (/ PADDLE-HEIGHT 2) BALL-RADIUS) 1 1))
-(define BALL-mpc (make-ball 100 (- PADDLE-Y (/ PADDLE-HEIGHT 2) BALL-RADIUS) 1 1))
-(define BALL-rpc (make-ball 120 (- PADDLE-Y (/ PADDLE-HEIGHT 2) BALL-RADIUS) 1 1))
+(define BALL-lpc (make-ball 80 (- PADDLE-Y (/ PADDLE-HEIGHT 2)) 1 1))
+(define BALL-mpc (make-ball 100 (- PADDLE-Y (/ PADDLE-HEIGHT 2)) 1 1))
+(define BALL-rpc (make-ball 120 (- PADDLE-Y (/ PADDLE-HEIGHT 2)) 1 1))
 
 ;; A Paddle is a number X
 ;; - Where x is the x-position of the paddle
@@ -314,7 +314,7 @@
 
 ;; move-left : World -> World
 ;; Moves paddle to the right
-<<<<<<< HEAD
+
 (check-expect (move-left WORLD0)
               (make-world (make-ball (- 100 PADDLE-SPEED) 177 BALL-SPEED 0)
                           (- 100 PADDLE-SPEED)
@@ -322,9 +322,8 @@
                           #false
                           3
                           0))
-=======
+
 (check-expect (move-left WORLD0) (move-ball-and-paddle-helper WORLD0 #true #true))
->>>>>>> 7a58305c0b62c2cadd546756aff0cb6e06344896
 
 (define (move-left w)
   (cond
@@ -341,11 +340,11 @@
                                                                            3
                                                                            0))
 (check-expect (move-ball-and-paddle-helper WORLD0 #true #false) (make-world INITIAL-BALL
-                                                                           (displace-paddle PADDLE1 #true)
-                                                                           INITIAL-BRICKS
-                                                                           #false
-                                                                           3
-                                                                           0))
+                                                                            (displace-paddle PADDLE1 #true)
+                                                                            INITIAL-BRICKS
+                                                                            #false
+                                                                            3
+                                                                            0))
 
 (define (move-ball-and-paddle-helper w left? ball?)
   (cond
@@ -369,9 +368,9 @@
                                                        1
                                                        1))
 (check-expect (displace-ball BALL-nc #false) (make-ball (+ 100 PADDLE-SPEED)
-                                                       150
-                                                       1
-                                                       1))
+                                                        150
+                                                        1
+                                                        1))
 
 (define (displace-ball ball left?)
   (cond
@@ -384,15 +383,12 @@
                      (ball-vx ball)
                      (ball-vy ball))]))
 
-<<<<<<< HEAD
-;; Paddle Boolean, Paddle
-=======
+
 ;; displace-paddle : Paddle, Boolean -> Paddle
 ;; Moves the paddle either left or right depending on the given boolean
-(check-expect (displace-paddle PADDLE1 #true) (make-paddle (- 100 PADDLE-SPEED)))
-(check-expect (displace-paddle PADDLE1 #false) (make-paddle (+ 100 PADDLE-SPEED)))
+(check-expect (displace-paddle PADDLE1 #true) (- 100 PADDLE-SPEED))
+(check-expect (displace-paddle PADDLE1 #false) (+ 100 PADDLE-SPEED))
 
->>>>>>> 7a58305c0b62c2cadd546756aff0cb6e06344896
 (define (displace-paddle paddle left?)
   (cond
     [left? (- paddle PADDLE-SPEED)]
@@ -431,7 +427,7 @@
 
 ;; move-ball : World -> World
 ;; Checks if there is a collision or not and changes ball direction if nececssary
-(check-expect (move-ball-helper WORLD-nc) (move-ball WORLD-nc))
+(check-expect (move-ball-helper WORLD-nc)  (move-ball WORLD-nc))
 (check-expect (move-ball-helper WORLD-lwc) (flip-x WORLD-lwc))
 (check-expect (move-ball-helper WORLD-rwc) (flip-x WORLD-rwc))
 (check-expect (move-ball-helper WORLD-twc) (flip-y WORLD-twc))
@@ -450,8 +446,8 @@
     [(collision? w)
      (cond
        [(touching-wall? (world-ball w)) (cond
-                             [(touching-wall-x? (world-ball w)) (flip-x w)]
-                             [(touching-wall-t? (world-ball w)) (flip-y w)])]
+                                          [(touching-wall-x? (world-ball w)) (flip-x w)]
+                                          [(touching-wall-t? (world-ball w)) (flip-y w)])]
        [(brick? (within-brick (world-lob w) (world-ball w))) (cond
                                                                [(within-brick-y? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-y w) (within-brick (world-lob w) (world-ball w)))]
                                                                [(within-brick-x? (within-brick (world-lob w) (world-ball w)) (world-ball w)) (remove-brick (flip-x w) (within-brick (world-lob w) (world-ball w)))]
@@ -469,13 +465,12 @@
                                                         LIVES
                                                         0)))
 
-(define (flip-x w)
-  (move-ball (make-world (flip-ball (world-ball w) #true)
-                         (world-paddle w)
-                         (world-lob w)
-                         (world-launched w)
-                         (world-lives w)
-                         (world-score w))))
+(define (flip-x w) (move-ball (make-world (flip-ball (world-ball w) #true)
+                                          (world-paddle w)
+                                          (world-lob w)
+                                          (world-launched w)
+                                          (world-lives w)
+                                          (world-score w))))
 
 ;; flip-y : World -> World
 ;; Negates the ball's y velocity
@@ -486,13 +481,12 @@
                                                         LIVES
                                                         0)))
 
-(define (flip-y w)
-  (move-ball (make-world (flip-ball (world-ball w) #false)
-                         (world-paddle w)
-                         (world-lob w)
-                         (world-launched w)
-                         (world-lives w)
-                         (world-score w))))
+(define (flip-y w) (move-ball (make-world (flip-ball (world-ball w) #false)
+                                          (world-paddle w)
+                                          (world-lob w)
+                                          (world-launched w)
+                                          (world-lives w)
+                                          (world-score w))))
 
 (define (flip-ball ball x?)
   (cond
@@ -663,7 +657,7 @@
                                 (world-ball WORLD-lpc)) #true)
 (check-expect (touching-paddle? PADDLE1
                                 (make-ball 81
-                                           (- PADDLE-Y (/ PADDLE-HEIGHT 2) BALL-RADIUS)
+                                           (- PADDLE-Y (/ PADDLE-HEIGHT 2))
                                            1
                                            1))
               #true)
