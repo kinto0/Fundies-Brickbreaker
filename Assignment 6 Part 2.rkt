@@ -104,6 +104,33 @@
     [(empty? lob) ... ]
     [(cons? lob) ... ]))
 
+;; generate-bricks : Number, Number, LoB -> LoB
+;; Generates a list of bricks in the given dimensions
+;; @Override lob-temp
+(define (generate-bricks x y lob)
+  (cond
+    [(> y 0) (append lob (generate-bricks x (sub1 y) (generate-brick-row x
+                                                                         (make-brick 2 (- (/ WIDTH x) 20) (- (* 20 y) 10))
+                                                                         '())))]
+    [else lob]))
+
+;; generate-brick-row : Number, Number -> LoB
+;; generates a list of bricks for one row
+;; @Override lob-temp
+(define (generate-brick-row total brick lob)
+  (cond
+    [(> total (length lob)) (generate-brick-row total
+                                      (make-brick 2
+                                      (+ (brick-x brick) (/ WIDTH total))
+                                      (brick-y brick))
+                                      (cons brick
+                                            lob))]
+    [else lob]))
+
+;; CHANGE THIS TO CHANGE BRICK SIZE - BUT BEWARE!!!!! IT WILL MESS UP CHECK EXPECTS
+(define INITIAL-BRICKS.v2 (reverse (generate-bricks 5 3 '())))
+;; "(reverse" is called because the INITIAL-BRICKS starts low-to-high
+
 (define INITIAL-BRICKS (list (make-brick 2 20 10)
                              (make-brick 2 60 10)
                              (make-brick 2 100 10)
@@ -139,7 +166,7 @@
         (world-lives w) ...
         (world-score w) ... ))
 
-(define WORLD0 (make-world INITIAL-BALL PADDLE1 INITIAL-BRICKS #false LIVES 0))
+(define WORLD0 (make-world INITIAL-BALL PADDLE1 INITIAL-BRICKS.v2 #false LIVES 0))
 
 (define WORLD-nc (make-world BALL-nc PADDLE1 INITIAL-BRICKS #true LIVES 0))
 
